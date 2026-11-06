@@ -482,12 +482,14 @@
   /* =====================================================================
      ПАНЕЛИ РЕЗЮМЕ
      ===================================================================== */
-  function contactsHTML() {
+  // блок контактов с заголовком; если контакты не заполнены — не показываем ничего
+  function contactsHTML(title) {
     const c = R.contacts, out = [];
     if (c.telegram) out.push(`<a class="contact" href="https://t.me/${c.telegram}" target="_blank" rel="noopener">✈️ Telegram</a>`);
     if (c.github) out.push(`<a class="contact" href="${c.github}" target="_blank" rel="noopener">🐙 GitHub</a>`);
     if (c.email) out.push(`<a class="contact" href="mailto:${c.email}">✉️ ${c.email}</a>`);
-    return out.length ? `<div class="contacts">${out.join('')}</div>` : '<p class="muted">Контакты скоро появятся здесь.</p>';
+    if (!out.length) return '';
+    return `<div class="sec-h">${title}</div><div class="contacts">${out.join('')}</div>`;
   }
   const pips = (n) => Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
 
@@ -584,12 +586,12 @@
       kicker: 'База Тёмных · финал', title: 'Трон Безработицы',
       html: st.thrDone
         ? `<p>Трон разрушен. Андрей готов к работе.</p>
-           <div class="sec-h">Связаться</div>${contactsHTML()}
+           ${contactsHTML('Связаться')}
            <button class="btn-gold panel-next" type="button" data-act="victory">🏆 Итоги матча</button>`
         : `<p>Последний рубеж — <b>Трон Безработицы</b>. Разрушь его, и резюме будет пройдено.</p>
            <div class="tower-hp"><i id="thrHp" style="width:${100 - st.thrHits * 25}%"></i></div>
            <div class="boss-actions"><button class="btn-gold" type="button" data-act="throne">💥 Атаковать трон</button></div>
-           <div class="sec-h">Связаться</div>${contactsHTML()}`,
+           ${contactsHTML('Связаться')}`,
     }),
   };
 
@@ -874,8 +876,7 @@
         ${rows.map((r) => `<tr class="${r[5] ? 'me' : ''}"><td><span class="pl">${r[5] ? `<img src="${R.portrait}" alt="">` : ''}<b>${r[0]}</b></span></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}
       </table>
       <div class="v-review"><div class="stars">★★★★★</div>Оценка от ${R.teacherGen}: <b>ожидается…</b> 🙏</div>
-      <div class="sec-h">Связаться с Андреем</div>
-      ${contactsHTML()}
+      ${contactsHTML('Связаться с Андреем')}
       <div class="v-btns">
         <button class="btn-gold" type="button" id="vHire">${st.hired ? '✓ Андрей в вашей команде' : '🤝 Нанять Андрея'}</button>
         <button class="btn-dark" type="button" id="vBoard">☰ Всё резюме</button>
@@ -925,8 +926,7 @@
           <div class="sec-h">Хобби</div>
           ${row('Дота', `${R.hobby.role} · ${R.hobby.rank} · ${fmt(R.hobby.hours)} ч`)}
           ${row('Ещё', R.hobby.other[1])}
-          <div class="sec-h">Контакты</div>
-          ${contactsHTML()}
+          ${contactsHTML('Контакты')}
         </div>
       </div>`;
   }
