@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anenzik — Андрей Мищенко · Резюме</title>
+  <meta name="description" content="Резюме Андрея Мищенко (Anenzik), Fullstack / GameDev. Интерактивная 3D-карта в стиле MOBA.">
+  <meta property="og:title" content="Anenzik — резюме-игра">
+  <meta property="og:description" content="Андрей Мищенко · Fullstack / GameDev · 3D-резюме, в которое можно поиграть">
+  <meta property="og:image" content="img/hero.jpg">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 3 58 32 32 61 6 32Z' fill='%23e8b04a' stroke='%23fff3c4' stroke-width='3'/%3E%3Cpath d='M32 16 46 32 32 48 18 32Z' fill='%23701c1c'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@600;700&family=Oswald:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 3D-сцена -->
+  <canvas id="scene" aria-label="3D-карта резюме"></canvas>
+  <div id="vignette"></div>
+  <div id="labels" aria-hidden="true"></div>
+  <div id="fx" aria-hidden="true"></div>
+  <div id="flash"></div>
+
+  <!-- ============ ГЛАВНОЕ МЕНЮ ============ -->
+  <section id="menu" class="screen">
+    <div class="menu-inner">
+      <div class="menu-tag">Резюме · Fullstack / GameDev</div>
+      <h1 class="logo" data-text="ANENZIK">ANENZIK</h1>
+      <div class="menu-sub">Андрей Мищенко · 18 лет · Раменское</div>
+      <button id="btnPlay" class="btn-play" type="button"><span>ИГРАТЬ</span></button>
+      <div class="menu-hint">🔊 Лучше со звуком &nbsp;·&nbsp; F11 — во весь экран</div>
+    </div>
+    <div class="menu-corner">ver. 1.0 · сезон «Резюме-2026»</div>
+  </section>
+
+  <!-- Поиск игры -->
+  <div id="search" class="search hidden">
+    <div class="search-spin"></div>
+    <div>
+      <div class="search-title">ПОИСК ИГРЫ</div>
+      <div class="search-time" id="searchTime">0:00</div>
+    </div>
+  </div>
+
+  <!-- Игра найдена -->
+  <div id="found" class="modal-wrap hidden">
+    <div class="found frame">
+      <div class="found-title">ИГРА НАЙДЕНА</div>
+      <div class="found-mode">Режим: <b>Резюме · Рейтинговая</b></div>
+      <div class="found-ring">
+        <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="ring-bg"/><circle cx="50" cy="50" r="44" class="ring-fg" id="foundRing"/></svg>
+        <span id="foundCount">10</span>
+      </div>
+      <div class="found-btns">
+        <button id="btnAccept" class="btn-gold" type="button">ПРИНЯТЬ</button>
+        <button id="btnDecline" class="btn-dark" type="button">ОТКЛОНИТЬ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ЭКРАН ЗАГРУЗКИ ============ -->
+  <section id="loading" class="screen hidden">
+    <div class="load-teams">
+      <div class="team light">
+        <div class="team-name">СВЕТЛЫЕ</div>
+        <div class="team-cards" id="lightCards"></div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="team dark">
+        <div class="team-name">ТЁМНЫЕ</div>
+        <div class="team-cards" id="darkCards"></div>
+      </div>
+    </div>
+    <div class="load-bottom">
+      <div class="load-status" id="loadStatus">Загрузка карты…</div>
+      <div class="load-bar"><div id="loadFill"></div></div>
+      <div class="load-tip" id="loadTip"></div>
+    </div>
+  </section>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden">
+
+    <!-- Верхняя панель -->
+    <div class="topbar">
+      <div class="tb-team light"><span class="tb-label">СВЕТЛЫЕ</span><span class="tb-score" id="scoreLight">0</span></div>
+      <div class="tb-center">
+        <div class="tb-time" id="gameTime">0:00</div>
+        <div class="tb-daynight" id="dayNight">☀</div>
+      </div>
+      <div class="tb-team dark"><span class="tb-score" id="scoreDark">0</span><span class="tb-label">ТЁМНЫЕ</span></div>
+    </div>
+
+    <!-- Кнопки справа сверху -->
+    <div class="topright">
+      <button class="icon-btn" id="btnBoard" type="button" title="Полное резюме (TAB)">☰ <span>Резюме</span></button>
+      <button class="icon-btn" id="btnAch" type="button" title="Достижения">🏆 <span id="achCount">0/0</span></button>
+      <button class="icon-btn" id="btnMusic" type="button" title="Музыка (M)">♫</button>
+      <button class="icon-btn" id="btnSound" type="button" title="Звук">🔊</button>
+    </div>
+
+    <!-- Лента убийств -->
+    <div id="killfeed"></div>
+
+    <!-- Чат -->
+    <div id="chat"></div>
+
+    <!-- Миникарта -->
+    <div class="minimap frame">
+      <canvas id="minimap" width="440" height="440" aria-label="Миникарта: клик — полететь туда"></canvas>
+      <div class="minimap-hint">клик — полёт</div>
+    </div>
+
+    <!-- Нижняя панель героя -->
+    <div class="hero-bar frame">
+      <div class="hb-portrait">
+        <img id="hbPortrait" alt="Портрет героя">
+        <div class="hb-level" id="hbLevel">18</div>
+      </div>
+      <div class="hb-main">
+        <div class="hb-name"><b id="hbNick">Anenzik</b> <span id="hbClass"></span></div>
+        <div class="hb-abilities" id="abilities"></div>
+        <div class="hb-bars">
+          <div class="bar hp"><div class="bar-fill" id="hpFill"></div><span id="hpText">Сон 100 / 100</span></div>
+          <div class="bar mp"><div class="bar-fill" id="mpFill"></div><span id="mpText">Кофе 100 / 100</span></div>
+        </div>
+      </div>
+      <div class="hb-inv">
+        <div class="inv-grid" id="inventory"></div>
+        <div class="inv-neutral" id="neutralSlot" title="Нейтральный предмет"></div>
+        <div class="gold"><i class="coin"></i><span id="gold">0</span></div>
+      </div>
+    </div>
+
+    <!-- Навигация по экскурсии -->
+    <div class="tour frame">
+      <div class="tour-step" id="tourStep">1 / 8</div>
+      <div class="tour-title" id="tourTitle">База</div>
+      <div class="tour-dots" id="tourDots"></div>
+      <div class="tour-btns">
+        <button class="btn-dark sm" id="btnPrev" type="button" aria-label="Назад">◀</button>
+        <button class="btn-gold sm" id="btnNext" type="button">Дальше ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Панель раздела резюме -->
+  <aside id="panel" class="panel frame" aria-live="polite">
+    <button class="panel-close" id="panelClose" type="button" aria-label="Свернуть">✕</button>
+    <div class="panel-head">
+      <div class="panel-icon" id="panelIcon">⚑</div>
+      <div>
+        <div class="panel-kicker" id="panelKicker">Локация</div>
+        <h2 class="panel-title" id="panelTitle">Заголовок</h2>
+      </div>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+  </aside>
+
+  <!-- Бой с боссом -->
+  <div id="bossbar" class="bossbar hidden">
+    <div class="bossbar-name">⏳ ДЕДЛАЙН <small>· Древний босс · ур. 30</small></div>
+    <div class="bossbar-track"><div class="bossbar-fill" id="bossFill"></div><span id="bossHpText">5000 / 5000</span></div>
+  </div>
+
+  <!-- Баннер (ПЕРВАЯ КРОВЬ и т.п.) -->
+  <div id="banner"><div class="banner-main"></div><div class="banner-sub"></div></div>
+
+  <!-- Ачивки -->
+  <div id="toasts"></div>
+
+  <!-- Ульта: врезка с фото -->
+  <div id="ultCut" aria-hidden="true">
+    <div class="ult-lines"></div>
+    <img id="ultImg" alt="">
+    <div class="ult-text">СТАРЫЙ БОГ<br>ЗДЕСЬ И СОЛО</div>
+  </div>
+
+  <!-- Табло = полное резюме -->
+  <div id="board" class="modal-wrap hidden">
+    <div class="board frame" id="boardInner"></div>
+  </div>
+
+  <!-- Достижения -->
+  <div id="achModal" class="modal-wrap hidden">
+    <div class="ach-list frame" id="achList"></div>
+  </div>
+
+  <!-- Экран победы -->
+  <section id="victory" class="screen hidden">
+    <div class="victory-inner" id="victoryInner"></div>
+  </section>
+
+  <div id="hint" class="hint hidden"></div>
+
+  <script src="lib/three.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/creeps.js"></script>
+  <script src="js/tour.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
